@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Working Mobile Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #1e1e24;
+            padding: 10px;
+        }
+
+        .calculator {
+            width: 100%;
+            max-width: 340px;
+            background-color: #000000;
+            padding: 20px;
+            border-radius: 30px;
+            box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: flex-end;
+            padding: 10px 20px;
+            height: 120px;
+            overflow: hidden;
+        }
+
+        .previous-operand {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+            min-height: 1.5rem;
+        }
+
+        .current-operand {
+            color: #ffffff;
+            font-size: 2.5rem;
+            font-weight: 500;
+            word-wrap: break-word;
+            word-break: break-all;
+            text-align: right;
+            width: 100%;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            border: none;
+            font-size: 1.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            background-color: #333333;
+            color: #ffffff;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn:active {
+            background-color: #555555;
+        }
+
+        .btn.operator {
+            background-color: #ff9f0a;
+            color: #ffffff;
+        }
+
+        .btn.operator:active {
+            background-color: #cc7f08;
+        }
+
+        .btn.function {
+            background-color: #a5a5a5;
+            color: #000000;
+        }
+
+        .btn.function:active {
+            background-color: #7c7c7c;
+        }
+
+        .btn.zero {
+            grid-column: span 2;
+            aspect-ratio: auto;
+            height: 100%;
+            border-radius: 30px;
+            padding-left: 25px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="calculator">
+        <div class="screen">
+            <div id="previous" class="previous-operand"></div>
+            <div id="current" class="current-operand">0</div>
+        </div>
+
+        <div class="buttons">
+            <button class="btn function" onclick="clearScreen()">AC</button>
+            <button class="btn function" onclick="toggleSign()">±</button>
+            <button class="btn function" onclick="percentage()">%</button>
+            <button class="btn operator" onclick="chooseOperator('/')">÷</button>
+
+            <button class="btn" onclick="appendNumber('7')">7</button>
+            <button class="btn" onclick="appendNumber('8')">8</button>
+            <button class="btn" onclick="appendNumber('9')">9</button>
+            <button class="btn operator" onclick="chooseOperator('*')">×</button>
+
+            <button class="btn" onclick="appendNumber('4')">4</button>
+            <button class="btn" onclick="appendNumber('5')">5</button>
+            <button class="btn" onclick="appendNumber('6')">6</button>
+            <button class="btn operator" onclick="chooseOperator('-')">-</button>
+
+            <button class="btn" onclick="appendNumber('1')">1</button>
+            <button class="btn" onclick="appendNumber('2')">2</button>
+            <button class="btn" onclick="appendNumber('3')">3</button>
+            <button class="btn operator" onclick="chooseOperator('+')">+</button>
+
+            <button class="btn zero" onclick="appendNumber('0')">0</button>
+            <button class="btn" onclick="appendNumber('.')">.</button>
+            <button class="btn operator" onclick="compute()">=</button>
+        </div>
+    </div>
+
+    <script>
+        let currentDisplay = '0';
+        let previousDisplay = '';
+        let operation = null;
+        let resetScreen = false;
+
+        const currentDisplayElement = document.getElementById('current');
+        const previousDisplayElement = document.getElementById('previous');
+
+        function updateDisplay() {
+            currentDisplayElement.innerText = currentDisplay;
+            if (operation != null) {
+                let displayOp = operation === '*' ? '×' : operation === '/' ? '÷' : operation;
+                previousDisplayElement.innerText = `${previousDisplay} ${displayOp}`;
+            } else {
+                previousDisplayElement.innerText = previousDisplay;
+            }
+        }
+
+        function appendNumber(number) {
+            if (number === '.' && currentDisplay.includes('.')) return;
+            if (currentDisplay === '0' && number !== '.' || resetScreen) {
+                currentDisplay = number;
+                resetScreen = false;
+            } else {
+                currentDisplay = currentDisplay.toString() + number.toString();
+            }
+            updateDisplay();
+        }
+
+        function chooseOperator(op) {
+            if (currentDisplay === '') return;
+            if (previousDisplay !== '') {
+                compute();
+            }
+            operation = op;
+            previousDisplay = currentDisplay;
+            resetScreen = true;
+            updateDisplay();
+        }
+
+        function compute() {
+            let computation;
+            const prev = parseFloat(previousDisplay);
+            const current = parseFloat(currentDisplay);
+            if (isNaN(prev) || isNaN(current)) return;
+
+            switch (operation) {
+                case '+':
+                    computation = prev + current;
+                    break;
+                case '-':
+                    computation = prev - current;
+                    break;
+                case '*':
+                    computation = prev * current;
+                    break;
+                case '/':
+                    computation = current === 0 ? "Error" : prev / current;
+                    break;
+                default:
+                    return;
+            }
+
+            currentDisplay = computation.toString();
+            operation = null;
+            previousDisplay = '';
+            resetScreen = true;
+            updateDisplay();
+        }
+
+        function clearScreen() {
+            currentDisplay = '0';
+            previousDisplay = '';
+            operation = null;
+            updateDisplay();
+        }
+
+        function toggleSign() {
+            currentDisplay = (parseFloat(currentDisplay) * -1).toString();
+            updateDisplay();
+        }
+
+        function percentage() {
+            currentDisplay = (parseFloat(currentDisplay) / 100).toString();
+            updateDisplay();
+        }
+    </script>
+    </body>
+</html>
